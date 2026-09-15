@@ -1,23 +1,55 @@
-#include <stdio.h>
+#include <stdio.h>      /* printf()  */
+#include <stdlib.h>     /* EXIT_FAILURE */
+#include <time.h>       /* time()  */
+#include <sys/time.h>   /* gettimeofday(). localtime(), timeval struct  */
+#include <unistd.h>     /* sleep(), getpid()  */
 #include "logger.h"
 
-int main(void) {
+static int run() {
+    for (;;) {
+        LOG_DEBUG("%ld", time(NULL));
+    }
+}
 
-    LOG("Application Started");
+int main(int argc, char *argv[]) {
 
-    struct timeval epoch;
-    struct timezone tz;
+    set_log_level(LOG_INFO);
+    LOG_INFO("This goes to stdout only!");
 
-    LOG("Hello, World!");
-    LOG("Hello %s", "World");
+    // set/enable log file output
+    if (!set_log_filename("app.log")) {
+        return EXIT_FAILURE;
+    }
 
-    const int PID = getpid();
-    LOG("PID = %d", PID);
+    // set log level to DEBUG
+    set_log_level(LOG_DEBUG);
 
-    gettimeofday(&epoch, &tz);
-    LOG("epoch = %d.%06ld", epoch.tv_sec, epoch.tv_usec);
+    if (argc > 1) {
+        run(); // run the continuous loop test
+    }
+    else {
+        LOG_INFO("Application Started");
 
-    LOG("Application Stopped");
+        struct timeval epoch;
+        struct timezone tz;
+
+        LOG_INFO("Hello, World!");
+
+        const int PID = getpid();
+        LOG_DEBUG("PID = %d", PID);
+
+        gettimeofday(&epoch, &tz);
+        LOG_DEBUG("epoch = %d.%06ld", epoch.tv_sec, epoch.tv_usec);
+
+        LOG_INFO("Application Stopped");
+
+        set_log_level(LOG_INFO);
+
+        LOG_DEBUG("this won't be logged given log_level changed to INFO");
+
+    }
+
+    close_logger();
 
     return 0;
 }
